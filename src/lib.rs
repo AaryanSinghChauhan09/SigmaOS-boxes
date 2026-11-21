@@ -1,54 +1,20 @@
-//! SigmaOS boxes component
+//! SigmaOS boxes component.
+//!
+//! Rust implementation of `archlinux/boxes` (arch-boxes on GitLab): the
+//! tool that builds QCOW2 disk images of Arch Linux for VMs/cloud.
+//!
+//! Upstream `arch-boxes` is a bash tool using mkosi/systemd-repart to
+//! produce bootable images. This port implements the image-build model:
+//! disk layout (partitions, filesystems), package selection, boot mode,
+//! and the mkosi-style manifest the builder consumes.
+
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use thiserror::Error;
+pub mod disk;
+pub mod error;
+pub mod image;
 
-/// Error types for this component.
-#[derive(Debug, Error)]
-pub enum ComponentError {
-    /// Not initialised.
-    #[error("component not initialised")]
-    NotInitialised,
-    /// Unsupported operation.
-    #[error("unsupported: {0}")]
-    Unsupported(&'static str),
-}
-
-/// Result alias.
-pub type ComponentResult<T> = Result<T, ComponentError>;
-
-/// Component handle.
-#[derive(Debug, Default, Clone)]
-pub struct Component { initialised: bool }
-
-impl Component {
-    /// Create uninitialised component.
-    pub fn new() -> Self { Self::default() }
-    /// Initialise.
-    pub fn init(&mut self) -> ComponentResult<()> { self.initialised = true; Ok(()) }
-    /// Is ready?
-    pub fn is_ready(&self) -> bool { self.initialised }
-    /// Run.
-    pub fn run(&self) -> ComponentResult<()> {
-        if !self.initialised { return Err(ComponentError::NotInitialised); }
-        Ok(())
-    }
-    /// Reset.
-    pub fn reset(&mut self) { self.initialised = false; }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_new_not_ready() { assert!(!Component::new().is_ready()); }
-    #[test]
-    fn test_init_ok() { let mut c = Component::new(); c.init().unwrap(); assert!(c.is_ready()); }
-    #[test]
-    fn test_run_before_init_err() { assert!(Component::new().run().is_err()); }
-    #[test]
-    fn test_run_after_init_ok() { let mut c = Component::new(); c.init().unwrap(); assert!(c.run().is_ok()); }
-    #[test]
-    fn test_reset() { let mut c = Component::new(); c.init().unwrap(); c.reset(); assert!(!c.is_ready()); }
-}
+pub use disk::{DiskImage, Filesystem, Partition, PartitionTable};
+pub use error::BoxesError;
+pub use image::{BootMode, ImageBuild, ImageFormat, PackageSet, build_plan};

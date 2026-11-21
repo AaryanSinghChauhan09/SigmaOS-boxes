@@ -1,16 +1,16 @@
 [component]
 name = "SigmaOS-boxes"
 tier = 2
-stability = "scaffold"
+stability = "beta"
 language = "rust"
 description = "SigmaOS boxes component (Arch Linux inspired)"
-upstream = []
+upstream = ["https://gitlab.archlinux.org/archlinux/boxes"]
 
 [contract]
-provides = ["component"]
+provides = ["image-build-plan", "disk-layout", "mkosi-manifest"]
 depends_on = []
 
 [maturity]
 status = "Implemented"
-test_evidence = "Compiles and passes AAA unit tests"
+test_evidence = "cargo test: 6 tests pass (disk layout, build plan, boot modes)"
 next_milestone = "Hardware and runtime integration"
